@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custom Video Player Modal</title>
+    <title>Enhanced Video Player Modal</title>
     <!-- Add Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -14,77 +14,116 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             background: transparent;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
 
         .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%);
+            backdrop-filter: blur(8px);
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
         .modal-overlay.active {
             display: flex;
         }
 
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translate(-50%, -40%) scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
         .video-container {
             position: relative;
-            max-width: 90vw;
-            max-height: 90vh;
+            width: min(90vw, 1200px);
+            height: auto;
+            max-height: calc(100vh - 40px);
             background: #000;
-            border-radius: 15px;
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            border: 3px solid white;
+            box-shadow: 
+                0 25px 80px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: center center;
+            margin: auto;
         }
 
         .close-btn {
             position: absolute;
-            top: -50px;
+            top: -60px;
             right: 0;
-            background: white;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
             border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            border-radius: 22px;
             cursor: pointer;
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 18px;
             color: #333;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             z-index: 1001;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
 
         .close-btn:hover {
-            background: #f0f0f0;
+            background: rgba(255, 255, 255, 1);
             transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .close-btn:active {
+            transform: scale(0.95);
         }
 
         .video-player {
             position: relative;
             width: 100%;
             height: auto;
+            background: #000;
         }
 
         video {
             width: 100%;
             height: auto;
+            max-height: calc(100vh - 120px);
             display: block;
+            object-fit: contain;
         }
 
         .controls {
@@ -92,149 +131,204 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 8px 12px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+            backdrop-filter: blur(8px);
+            padding: 20px 16px 12px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             z-index: 2;
-            min-height: 50px;
+            min-height: 60px;
         }
 
-        .video-container:hover .controls {
+        .video-container:hover .controls,
+        .controls:hover,
+        .controls.show {
             opacity: 1;
         }
 
         .seek-container {
             position: absolute;
-            top: -3px;
-            left: 12px;
-            right: 12px;
-            height: 4px;
-            background: rgba(255,255,255,0.3);
+            top: -8px;
+            left: 16px;
+            right: 16px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
             cursor: pointer;
-            border-radius: 2px;
+            border-radius: 3px;
+            transition: height 0.2s ease;
+        }
+
+        .seek-container:hover {
+            height: 8px;
+            top: -9px;
         }
 
         .seek-bar {
             height: 100%;
-            background: #667eea;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
             position: relative;
             width: 0%;
             transition: width 0.05s linear;
-            border-radius: 2px;
+            border-radius: 3px;
+            box-shadow: 0 0 8px rgba(102, 126, 234, 0.4);
         }
 
         .seek-handle {
             position: absolute;
-            right: -6px;
+            right: -8px;
             top: 50%;
             transform: translateY(-50%);
-            width: 12px;
-            height: 12px;
+            width: 16px;
+            height: 16px;
             background: white;
             border-radius: 50%;
             cursor: pointer;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         }
 
         .seek-container:hover .seek-handle,
         .seek-bar.dragging .seek-handle,
         .seek-container.dragging .seek-handle {
             opacity: 1;
+            transform: translateY(-50%) scale(1.1);
         }
 
         .control-buttons {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             width: 100%;
         }
 
         .control-btn {
-            background: none;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
             border: none;
             color: white;
             cursor: pointer;
-            padding: 6px;
-            border-radius: 50%;
-            transition: all 0.3s ease;
+            padding: 8px;
+            border-radius: 12px;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             display: flex;
             align-items: center;
             justify-content: center;
-            min-width: 32px;
-            min-height: 32px;
+            min-width: 40px;
+            min-height: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .control-btn:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
         }
 
         .play-btn {
             font-size: 18px;
-            min-width: 36px;
-            min-height: 36px;
+            min-width: 48px;
+            min-height: 48px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .play-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
         }
 
         .volume-container {
             display: flex;
             align-items: center;
-            gap: 4px;
+            gap: 8px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .volume-btn {
             font-size: 16px;
-            min-width: 32px;
-            min-height: 32px;
+            min-width: 36px;
+            min-height: 36px;
+            background: transparent;
+            border: none;
+        }
+
+        .volume-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .volume-slider {
-            width: 60px;
-            height: 3px;
-            background: rgba(255,255,255,0.3);
+            width: 70px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
             border-radius: 2px;
             outline: none;
             cursor: pointer;
             -webkit-appearance: none;
+            transition: all 0.2s ease;
+        }
+
+        .volume-slider:hover {
+            background: rgba(255, 255, 255, 0.4);
         }
 
         .volume-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             background: white;
             border-radius: 50%;
             cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease;
+        }
+
+        .volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
         }
 
         .volume-slider::-moz-range-thumb {
-            width: 12px;
-            height: 12px;
+            width: 14px;
+            height: 14px;
             background: white;
             border-radius: 50%;
             cursor: pointer;
             border: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         }
 
         .time-display {
             color: white;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 500;
             white-space: nowrap;
+            padding: 6px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-feature-settings: 'tnum';
         }
 
         .time-divider {
-            color: rgba(255,255,255,0.7);
-            margin: 0 3px;
+            color: rgba(255, 255, 255, 0.6);
+            margin: 0 4px;
         }
 
         .fullscreen-btn {
             font-size: 16px;
-            min-width: 32px;
-            min-height: 32px;
+            min-width: 40px;
+            min-height: 40px;
             margin-left: auto;
         }
 
@@ -242,52 +336,207 @@
             flex: 1;
         }
 
+        /* Loading state */
+        .video-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive design */
         @media (max-width: 768px) {
+            .modal-overlay {
+                padding: 10px;
+            }
+            
+            .video-container {
+                width: 100%;
+                max-height: calc(100vh - 20px);
+                border-radius: 16px;
+            }
+            
+            .close-btn {
+                top: -50px;
+                right: 0;
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+            
             .volume-container {
                 display: none;
             }
             
             .controls {
-                padding: 6px 10px;
-                min-height: 45px;
+                padding: 16px 12px 10px;
+                min-height: 55px;
+                gap: 8px;
             }
             
             .seek-container {
-                left: 10px;
-                right: 10px;
+                left: 12px;
+                right: 12px;
+            }
+            
+            .control-btn {
+                min-width: 36px;
+                min-height: 36px;
+                padding: 6px;
+            }
+            
+            .play-btn {
+                min-width: 44px;
+                min-height: 44px;
+                font-size: 16px;
+            }
+            
+            .time-display {
+                font-size: 12px;
+                padding: 4px 8px;
+            }
+            
+            video {
+                max-height: calc(100vh - 80px);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .modal-overlay {
+                padding: 5px;
+            }
+            
+            .video-container {
+                max-height: calc(100vh - 10px);
+            }
+            
+            .controls {
+                gap: 6px;
+                padding: 12px 8px 8px;
+            }
+            
+            .control-btn {
+                min-width: 32px;
+                min-height: 32px;
+            }
+            
+            .play-btn {
+                min-width: 40px;
+                min-height: 40px;
+            }
+            
+            .seek-container {
+                left: 8px;
+                right: 8px;
+            }
+            
+            .close-btn {
+                top: -40px;
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+            
+            video {
+                max-height: calc(100vh - 60px);
+            }
+        }
+
+        /* Handle different zoom levels */
+        @media (min-resolution: 120dpi) {
+            .modal-overlay {
+                padding: 30px;
+            }
+            
+            .video-container {
+                max-height: calc(100vh - 60px);
+            }
+        }
+
+        @media (min-resolution: 150dpi) {
+            .modal-overlay {
+                padding: 40px;
+            }
+            
+            .video-container {
+                max-height: calc(100vh - 80px);
+            }
+        }
+
+        /* Focus states for accessibility */
+        .control-btn:focus,
+        .volume-slider:focus,
+        .seek-container:focus,
+        .close-btn:focus {
+            outline: 2px solid rgba(102, 126, 234, 0.8);
+            outline-offset: 2px;
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .close-btn {
+                background: rgba(45, 45, 45, 0.9);
+                color: white;
+            }
+            
+            .close-btn:hover {
+                background: rgba(60, 60, 60, 1);
             }
         }
     </style>
 </head>
 <body>
     <div class="modal-overlay active" id="modalOverlay">
-        <button class="close-btn" onclick="closeModal()">
+        <button class="close-btn" onclick="closeModal()" aria-label="Close video player">
             <i class="fas fa-times"></i>
         </button>
         <div class="video-container">
             <div class="video-player">
-                <video id="videoElement" preload="metadata">
+                <video id="videoElement" preload="metadata" aria-label="Video player">
                     <source src="source/edits/ayumu.mp4" type="video/mp4">
                     Your browser does not support the video tag.
                 </video>
                 
+                <div class="video-loading" id="videoLoading" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    Loading video...
+                </div>
+                
                 <div class="controls" id="videoControls">
-                    <div class="seek-container" onclick="seekVideo(event)">
+                    <div class="seek-container" onclick="seekVideo(event)" tabindex="0" role="slider" aria-label="Video progress">
                         <div class="seek-bar" id="seekBar">
                             <div class="seek-handle" id="seekHandle"></div>
                         </div>
                     </div>
                     
                     <div class="control-buttons">
-                        <button class="control-btn play-btn" id="playBtn" onclick="togglePlay()">
+                        <button class="control-btn play-btn" id="playBtn" onclick="togglePlay()" aria-label="Play/Pause">
                             <i class="fas fa-play"></i>
                         </button>
                         
                         <div class="volume-container">
-                            <button class="control-btn volume-btn" id="volumeBtn" onclick="toggleMute()">
+                            <button class="control-btn volume-btn" id="volumeBtn" onclick="toggleMute()" aria-label="Mute/Unmute">
                                 <i class="fas fa-volume-up"></i>
                             </button>
-                            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" oninput="changeVolume(this.value)">
+                            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" oninput="changeVolume(this.value)" aria-label="Volume">
                         </div>
                         
                         <div class="time-display">
@@ -298,7 +547,7 @@
                         
                         <div class="spacer"></div>
                         
-                        <button class="control-btn fullscreen-btn" onclick="toggleFullscreen()">
+                        <button class="control-btn fullscreen-btn" onclick="toggleFullscreen()" aria-label="Toggle fullscreen">
                             <i class="fas fa-expand"></i>
                         </button>
                     </div>
@@ -317,15 +566,19 @@
         const durationDisplay = document.getElementById('duration');
         const modalOverlay = document.getElementById('modalOverlay');
         const seekHandle = document.getElementById('seekHandle');
+        const videoLoading = document.getElementById('videoLoading');
+        const controls = document.getElementById('videoControls');
 
         let isDragging = false;
         let isSeeking = false;
         let animationId = null;
-        let lastVolumeBeforeMute = 100; // Store volume before mute
+        let lastVolumeBeforeMute = 100;
+        let controlsTimeout = null;
 
         function openModal() {
             modalOverlay.classList.add('active');
             document.body.style.overflow = 'hidden';
+            showControls();
         }
 
         function closeModal() {
@@ -337,6 +590,16 @@
                 cancelAnimationFrame(animationId);
                 animationId = null;
             }
+        }
+
+        function showControls() {
+            controls.classList.add('show');
+            clearTimeout(controlsTimeout);
+            controlsTimeout = setTimeout(() => {
+                if (!video.paused) {
+                    controls.classList.remove('show');
+                }
+            }, 3000);
         }
 
         function togglePlay() {
@@ -352,22 +615,22 @@
                     animationId = null;
                 }
             }
+            showControls();
         }
 
         function toggleMute() {
             if (video.muted) {
                 video.muted = false;
-                // Restore to last volume before mute
                 video.volume = lastVolumeBeforeMute / 100;
                 volumeSlider.value = lastVolumeBeforeMute;
                 updateVolumeButton(lastVolumeBeforeMute);
             } else {
-                // Store current volume before muting
                 lastVolumeBeforeMute = video.volume * 100;
                 video.muted = true;
                 volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
                 volumeSlider.value = 0;
             }
+            showControls();
         }
 
         function changeVolume(value) {
@@ -377,7 +640,6 @@
             
             updateVolumeButton(volumeValue);
             
-            // Update last volume if not muted
             if (volumeValue > 0) {
                 lastVolumeBeforeMute = volumeValue;
             }
@@ -399,6 +661,7 @@
                 const pos = (e.clientX - rect.left) / rect.width;
                 video.currentTime = pos * video.duration;
             }
+            showControls();
         }
 
         function handleSeekStart(e) {
@@ -408,6 +671,7 @@
             document.querySelector('.seek-container').classList.add('dragging');
             updateSeekPosition(e);
             e.preventDefault();
+            showControls();
         }
 
         function handleSeekMove(e) {
@@ -422,7 +686,6 @@
                 isDragging = false;
                 seekBar.classList.remove('dragging');
                 document.querySelector('.seek-container').classList.remove('dragging');
-                // If video was playing before seeking, continue playing
                 if (!video.paused) {
                     video.play();
                 }
@@ -434,7 +697,6 @@
             const rect = seekContainer.getBoundingClientRect();
             let pos = (e.clientX - rect.left) / rect.width;
             
-            // Ensure position stays within 0-1 range
             pos = Math.max(0, Math.min(1, pos));
             
             seekBar.style.width = (pos * 100) + '%';
@@ -481,6 +743,7 @@
             } else {
                 document.exitFullscreen();
             }
+            showControls();
         }
 
         // Event listeners
@@ -493,6 +756,15 @@
 
         video.addEventListener('loadedmetadata', () => {
             updateTimeDisplays();
+            videoLoading.style.display = 'none';
+        });
+
+        video.addEventListener('loadstart', () => {
+            videoLoading.style.display = 'block';
+        });
+
+        video.addEventListener('canplay', () => {
+            videoLoading.style.display = 'none';
         });
 
         video.addEventListener('ended', () => {
@@ -501,6 +773,7 @@
                 cancelAnimationFrame(animationId);
                 animationId = null;
             }
+            showControls();
         });
 
         video.addEventListener('play', () => {
@@ -512,6 +785,15 @@
                 cancelAnimationFrame(animationId);
                 animationId = null;
             }
+            showControls();
+        });
+
+        // Mouse movement to show controls
+        modalOverlay.addEventListener('mousemove', showControls);
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                closeModal();
+            }
         });
 
         // Draggable seek bar event listeners
@@ -519,6 +801,21 @@
         seekHandle.addEventListener('mousedown', handleSeekStart);
         document.addEventListener('mousemove', handleSeekMove);
         document.addEventListener('mouseup', handleSeekEnd);
+
+        // Touch events for mobile
+        seekBar.addEventListener('touchstart', (e) => {
+            handleSeekStart(e.touches[0]);
+        });
+        seekHandle.addEventListener('touchstart', (e) => {
+            handleSeekStart(e.touches[0]);
+        });
+        document.addEventListener('touchmove', (e) => {
+            if (isSeeking) {
+                e.preventDefault();
+                handleSeekMove(e.touches[0]);
+            }
+        });
+        document.addEventListener('touchend', handleSeekEnd);
 
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
@@ -536,6 +833,16 @@
                         break;
                     case 'Escape':
                         closeModal();
+                        break;
+                    case 'ArrowLeft':
+                        e.preventDefault();
+                        video.currentTime = Math.max(0, video.currentTime - 10);
+                        showControls();
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                        showControls();
                         break;
                 }
             }
