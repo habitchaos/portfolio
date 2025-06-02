@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Video Player Modal</title>
+    <!-- Add Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: transparent;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .video-container {
+            position: relative;
+            max-width: 90vw;
+            max-height: 90vh;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 3px solid white;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .close-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.1);
+        }
+
+        .video-player {
+            position: relative;
+            width: 100%;
+            height: auto;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 2;
+            min-height: 50px;
+        }
+
+        .video-container:hover .controls {
+            opacity: 1;
+        }
+
+        .seek-container {
+            position: absolute;
+            top: -3px;
+            left: 12px;
+            right: 12px;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            border-radius: 2px;
+        }
+
+        .seek-bar {
+            height: 100%;
+            background: #667eea;
+            position: relative;
+            width: 0%;
+            transition: width 0.05s linear;
+            border-radius: 2px;
+        }
+
+        .seek-handle {
+            position: absolute;
+            right: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .seek-container:hover .seek-handle,
+        .seek-bar.dragging .seek-handle,
+        .seek-container.dragging .seek-handle {
+            opacity: 1;
+        }
+
+        .control-buttons {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            min-height: 32px;
+        }
+
+        .control-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .play-btn {
+            font-size: 18px;
+            min-width: 36px;
+            min-height: 36px;
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .volume-btn {
+            font-size: 16px;
+            min-width: 32px;
+            min-height: 32px;
+        }
+
+        .volume-slider {
+            width: 60px;
+            height: 3px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        .time-display {
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .time-divider {
+            color: rgba(255,255,255,0.7);
+            margin: 0 3px;
+        }
+
+        .fullscreen-btn {
+            font-size: 16px;
+            min-width: 32px;
+            min-height: 32px;
+            margin-left: auto;
+        }
+
+        .spacer {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .volume-container {
+                display: none;
+            }
+            
+            .controls {
+                padding: 6px 10px;
+                min-height: 45px;
+            }
+            
+            .seek-container {
+                left: 10px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay active" id="modalOverlay">
+        <button class="close-btn" onclick="closeModal()">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="video-container">
+            <div class="video-player">
+                <video id="videoElement" preload="metadata">
+                    <source src="source/edits/ayumu.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                
+                <div class="controls" id="videoControls">
+                    <div class="seek-container" onclick="seekVideo(event)">
+                        <div class="seek-bar" id="seekBar">
+                            <div class="seek-handle" id="seekHandle"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-buttons">
+                        <button class="control-btn play-btn" id="playBtn" onclick="togglePlay()">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        
+                        <div class="volume-container">
+                            <button class="control-btn volume-btn" id="volumeBtn" onclick="toggleMute()">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" oninput="changeVolume(this.value)">
+                        </div>
+                        
+                        <div class="time-display">
+                            <span id="currentTime">0:00</span>
+                            <span class="time-divider">/</span>
+                            <span id="duration">0:00</span>
+                        </div>
+                        
+                        <div class="spacer"></div>
+                        
+                        <button class="control-btn fullscreen-btn" onclick="toggleFullscreen()">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('videoElement');
+        const playBtn = document.getElementById('playBtn');
+        const volumeBtn = document.getElementById('volumeBtn');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const seekBar = document.getElementById('seekBar');
+        const currentTimeDisplay = document.getElementById('currentTime');
+        const durationDisplay = document.getElementById('duration');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const seekHandle = document.getElementById('seekHandle');
+
+        let isDragging = false;
+        let isSeeking = false;
+        let animationId = null;
+        let lastVolumeBeforeMute = 100; // Store volume before mute
+
+        function openModal() {
+            modalOverlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            video.pause();
+            playBtn.innerHTML = '<i class="fas fa-play"></i>';
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+
+        function togglePlay() {
+            if (video.paused) {
+                video.play();
+                playBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                startProgressAnimation();
+            } else {
+                video.pause();
+                playBtn.innerHTML = '<i class="fas fa-play"></i>';
+                if (animationId) {
+                    cancelAnimationFrame(animationId);
+                    animationId = null;
+                }
+            }
+        }
+
+        function toggleMute() {
+            if (video.muted) {
+                video.muted = false;
+                // Restore to last volume before mute
+                video.volume = lastVolumeBeforeMute / 100;
+                volumeSlider.value = lastVolumeBeforeMute;
+                updateVolumeButton(lastVolumeBeforeMute);
+            } else {
+                // Store current volume before muting
+                lastVolumeBeforeMute = video.volume * 100;
+                video.muted = true;
+                volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                volumeSlider.value = 0;
+            }
+        }
+
+        function changeVolume(value) {
+            const volumeValue = parseInt(value);
+            video.volume = volumeValue / 100;
+            video.muted = volumeValue === 0;
+            
+            updateVolumeButton(volumeValue);
+            
+            // Update last volume if not muted
+            if (volumeValue > 0) {
+                lastVolumeBeforeMute = volumeValue;
+            }
+        }
+
+        function updateVolumeButton(value) {
+            if (value == 0) {
+                volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+            } else if (value < 50) {
+                volumeBtn.innerHTML = '<i class="fas fa-volume-down"></i>';
+            } else {
+                volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+            }
+        }
+
+        function seekVideo(e) {
+            if (!isSeeking) {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const pos = (e.clientX - rect.left) / rect.width;
+                video.currentTime = pos * video.duration;
+            }
+        }
+
+        function handleSeekStart(e) {
+            isSeeking = true;
+            isDragging = true;
+            seekBar.classList.add('dragging');
+            document.querySelector('.seek-container').classList.add('dragging');
+            updateSeekPosition(e);
+            e.preventDefault();
+        }
+
+        function handleSeekMove(e) {
+            if (isSeeking) {
+                updateSeekPosition(e);
+            }
+        }
+
+        function handleSeekEnd() {
+            if (isSeeking) {
+                isSeeking = false;
+                isDragging = false;
+                seekBar.classList.remove('dragging');
+                document.querySelector('.seek-container').classList.remove('dragging');
+                // If video was playing before seeking, continue playing
+                if (!video.paused) {
+                    video.play();
+                }
+            }
+        }
+
+        function updateSeekPosition(e) {
+            const seekContainer = document.querySelector('.seek-container');
+            const rect = seekContainer.getBoundingClientRect();
+            let pos = (e.clientX - rect.left) / rect.width;
+            
+            // Ensure position stays within 0-1 range
+            pos = Math.max(0, Math.min(1, pos));
+            
+            seekBar.style.width = (pos * 100) + '%';
+            video.currentTime = pos * video.duration;
+            updateTimeDisplays();
+        }
+
+        function updateProgress() {
+            if (!isDragging && video.duration) {
+                const progress = (video.currentTime / video.duration) * 100;
+                seekBar.style.width = progress + '%';
+            }
+        }
+
+        function startProgressAnimation() {
+            function animate() {
+                if (!video.paused && !video.ended) {
+                    updateProgress();
+                    updateTimeDisplays();
+                    animationId = requestAnimationFrame(animate);
+                }
+            }
+            animationId = requestAnimationFrame(animate);
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateTimeDisplays() {
+            currentTimeDisplay.textContent = formatTime(video.currentTime);
+            if (video.duration) {
+                durationDisplay.textContent = formatTime(video.duration);
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                modalOverlay.requestFullscreen().catch(err => {
+                    console.log('Error attempting to enable fullscreen:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // Event listeners
+        video.addEventListener('timeupdate', () => {
+            if (!animationId) {
+                updateProgress();
+                updateTimeDisplays();
+            }
+        });
+
+        video.addEventListener('loadedmetadata', () => {
+            updateTimeDisplays();
+        });
+
+        video.addEventListener('ended', () => {
+            playBtn.innerHTML = '<i class="fas fa-play"></i>';
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        });
+
+        video.addEventListener('play', () => {
+            startProgressAnimation();
+        });
+
+        video.addEventListener('pause', () => {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        });
+
+        // Draggable seek bar event listeners
+        seekBar.addEventListener('mousedown', handleSeekStart);
+        seekHandle.addEventListener('mousedown', handleSeekStart);
+        document.addEventListener('mousemove', handleSeekMove);
+        document.addEventListener('mouseup', handleSeekEnd);
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (modalOverlay.classList.contains('active')) {
+                switch(e.code) {
+                    case 'Space':
+                        e.preventDefault();
+                        togglePlay();
+                        break;
+                    case 'KeyM':
+                        toggleMute();
+                        break;
+                    case 'KeyF':
+                        toggleFullscreen();
+                        break;
+                    case 'Escape':
+                        closeModal();
+                        break;
+                }
+            }
+        });
+
+        // Auto-open the modal when page loads
+        window.addEventListener('load', openModal);
+    </script>
+</body>
+</html>
